@@ -25,7 +25,8 @@ import {
 import {
   createRestoreCwdCommand,
   createWindowsRestoreCwdCommand,
-  isRestorableTerminalTab
+  isRestorableTerminalTab,
+  isWindowsDrivePath
 } from './ssh-reload-state.js'
 import { isMac, isWin } from '../../common/platform.js'
 
@@ -160,9 +161,16 @@ export class StartupQueue {
       // refuse (control characters, over-long), and interpolating the raw value
       // instead would hand `startDirectory` - which a quick-connect link can
       // set - straight to the shell as a command.
-      cwdCommand = this.isPosixShell()
-        ? createRestoreCwdCommand(startFolder)
-        : createWindowsRestoreCwdCommand(startFolder, localShell || term.props.config.execWindows)
+      // A remote Windows host's shell is unknown from here; a drive-letter
+      // path gets CMD's `cd /d`, the OpenSSH for Windows default shell
+      // (#4535), same as createCdCommand does for remote tabs.
+      if (this.isRemoteShell() && isWindowsDrivePath(startFolder)) {
+        cwdCommand = createWindowsRestoreCwdCommand(startFolder, 'cmd.exe')
+      } else {
+        cwdCommand = this.isPosixShell()
+          ? createRestoreCwdCommand(startFolder)
+          : createWindowsRestoreCwdCommand(startFolder, localShell || term.props.config.execWindows)
+      }
     }
     if (cwdCommand) {
       scripts.unshift({ script: cwdCommand, delay: 0 })

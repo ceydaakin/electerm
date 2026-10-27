@@ -69,6 +69,11 @@ export function createWindowsRestoreCwdCommand (cwd, shell = '') {
   return `cd /d "${escaped}"`
 }
 
+// A drive-letter path (`C:/`, `D:\work`) can only mean a Windows host.
+export function isWindowsDrivePath (dir = '') {
+  return /^[a-zA-Z]:[\\/]/.test(dir)
+}
+
 /**
  * The `cd <dir>` command for a terminal session, used when the user sends a
  * directory from the file panel to the terminal.

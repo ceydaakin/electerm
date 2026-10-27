@@ -109,6 +109,17 @@ describe('Windows startup directory', () => {
     )
   })
 
+  test('uses CMD drive switching for a Windows start directory on a remote host', async () => {
+    assert.equal(
+      await startupCommand({ shell: 'powershell.exe', cwd: 'C:/', remote: true }),
+      'cd /d "C:/"\r'
+    )
+    assert.equal(
+      await startupCommand({ shell: 'powershell.exe', cwd: 'D:\\work folder', remote: true }),
+      'cd /d "D:\\work folder"\r'
+    )
+  })
+
   test('rejects empty and control-character paths for both Windows shells', async () => {
     const { createWindowsRestoreCwdCommand } = await loadCommands()
     for (const shell of ['powershell.exe', 'cmd.exe']) {
